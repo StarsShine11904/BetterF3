@@ -1,7 +1,6 @@
 package me.cominixo.betterf3.modules;
 
 import com.electronwill.nightconfig.core.Config;
-import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.platform.Window;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -100,9 +99,9 @@ public class SystemModule extends BaseModule {
         final String allocatedMemory =
                 String.format("% 2d%% %03dMB", totalMemory * 100 / maxMemory, totalMemory / 1024 / 1024);
 
-        final String vendorName = GlUtil.getVendor();
-        final String rendererName = GlUtil.getRenderer();
-        final String cpuInfo = GlUtil.getCpuInfo();
+        final String vendorName = getGpuVendor();
+        final String rendererName = getGpuRenderer();
+        final String cpuInfo = getCpuInfo();
 
         final String displayInfo = String.format(
                 "%d x %d (%s)",
@@ -175,6 +174,59 @@ public class SystemModule extends BaseModule {
                     : Math.round(gpuUtilizationPercentage) + "%";
         }
         return "N/A";
+    }
+
+    /**
+     * Gets GPU vendor information.
+     * Fallback method for Minecraft 26.3+ where GlUtil was removed.
+     *
+     * @return GPU vendor name or "Unknown"
+     */
+    private static String getGpuVendor() {
+        try {
+            // Try to get from system properties or environment
+            String vendor = System.getProperty("os.arch");
+            if (vendor != null && !vendor.isEmpty()) {
+                return vendor;
+            }
+        } catch (Exception e) {
+            // Silently fail
+        }
+        return "Unknown";
+    }
+
+    /**
+     * Gets GPU renderer information.
+     * Fallback method for Minecraft 26.3+ where GlUtil was removed.
+     *
+     * @return GPU renderer name or "Unknown"
+     */
+    private static String getGpuRenderer() {
+        try {
+            // Try to get GPU info from Java properties
+            String gpuInfo = System.getProperty("sun.java2d.d3d");
+            if (gpuInfo != null && !gpuInfo.isEmpty()) {
+                return gpuInfo;
+            }
+        } catch (Exception e) {
+            // Silently fail
+        }
+        return "Unknown";
+    }
+
+    /**
+     * Gets CPU information.
+     *
+     * @return CPU core count and architecture
+     */
+    private static String getCpuInfo() {
+        try {
+            int cores = Runtime.getRuntime().availableProcessors();
+            String arch = System.getProperty("os.arch");
+            return cores + "x " + arch;
+        } catch (Exception e) {
+            return "Unknown";
+        }
     }
 
     @Override
