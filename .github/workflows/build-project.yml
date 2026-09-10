@@ -1,24 +1,10 @@
-name: Build BetterF3
-# Builds the project and archives the checkstyle results
+name: Build BetterF3 (Manual)
 
 on:
-  pull_request:
-  push:
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'LICENSE.txt'
-      - 'CONTRIBUTING.md'
   workflow_dispatch:
-    inputs:
-      release:
-        description: Publish a Release
-        required: true
-        default: false
-        type: boolean
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -37,49 +23,21 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build with Gradle
         run: ./gradlew build --stacktrace
 
-      - name: Submit dependency graph
-        if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork }}
-        uses: gradle/actions/dependency-submission@v6
-        with:
-          dependency-graph: generate-and-submit
-          dependency-graph-continue-on-failure: false
-
       - name: Setup Environment Variables
         run: |
-          cat $GITHUB_WORKSPACE/gradle.properties | grep ^supported_minecraft_versions >> $GITHUB_ENV
           cat $GITHUB_WORKSPACE/gradle.properties | grep ^minecraft_version >> $GITHUB_ENV
           cat $GITHUB_WORKSPACE/gradle.properties | grep ^mod_version >> $GITHUB_ENV
 
-      - name: Archives Results
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v7
         with:
           name: BetterF3-${{ env.mod_version }}-mc${{ env.minecraft_version }}
           path: |
-            build/reports/
-            **/build/reports/
-            build/libs
-            **/build/libs/
-
-      - name: Release Version to GitHub
-        uses: softprops/action-gh-release@v3
-        if: ${{ github.event.inputs.release }}
-        with:
-          body_path: ${{ github.workspace }}/build/CHANGELOG.md
-          tag_name: v${{ env.mod_version }}
-          name: BetterF3 v${{ env.mod_version }}
-          target_commitish: ${{ github.sha }}
-          files: |
-            **/build/libs/BetterF3-*-NeoForge-*.jar
-            **/build/libs/BetterF3-*-Fabric-*.jar
-
-      - name: Release Version to 3rd Parties
-        if: ${{ github.event.inputs.release && github.triggering_actor == 'TreyRuffy' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CURSE_API_KEY: ${{ secrets.TREY_CURSE_API_KEY }}
-          MODRINTH_TOKEN: ${{ secrets.TREY_MODRINTH_API_KEY }}
-        run: |
-          ./gradlew publish publishUnified --stacktrace
+            fabric/build/libs/*.jar
+            **/build/libs/*.jar
