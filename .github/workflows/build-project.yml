@@ -27,7 +27,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build --stacktrace
+        run: ./gradlew :fabric:build --stacktrace
 
       - name: Setup Environment Variables
         run: |
