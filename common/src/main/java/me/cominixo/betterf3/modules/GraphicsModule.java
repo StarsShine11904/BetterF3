@@ -54,13 +54,8 @@ public class GraphicsModule extends BaseModule {
         // Biome Blend Radius
         lines.get(3).value(client.options.biomeBlendRadius().get());
 
-        // Shader
-        final Identifier shaderEffect = client.gameRenderer.currentPostEffect();
-        if (shaderEffect != null) {
-            lines.get(4).value(String.valueOf(shaderEffect));
-        } else {
-            lines.get(4).active = false;
-        }
+        // Shader (新版 GameRenderer 移除 currentPostEffect，安全隱藏該行)
+        lines.get(4).active = false;
 
         lines.get(0).inReducedDebug = true;
         lines.get(3).inReducedDebug = true;

@@ -1,10 +1,8 @@
 package me.cominixo.betterf3.modules;
 
 import com.electronwill.nightconfig.core.Config;
-import com.mojang.blaze3d.platform.GLX;
+import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.GpuDevice;
-import com.mojang.blaze3d.systems.RenderSystem;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.time.LocalDateTime;
@@ -94,7 +92,6 @@ public class SystemModule extends BaseModule {
         final long usedMemory = totalMemory - freeMemory;
 
         final Window window = client.getWindow();
-        final GpuDevice gpuDevice = RenderSystem.getDevice();
 
         final String javaVersion = String.format("%s", System.getProperty("java.version"));
         final String memoryUsage = String.format(
@@ -102,12 +99,17 @@ public class SystemModule extends BaseModule {
         final String allocationRateStr = String.format("% 2d MB/s", this.allocationRate(usedMemory) / 1024 / 1024);
         final String allocatedMemory =
                 String.format("% 2d%% %03dMB", totalMemory * 100 / maxMemory, totalMemory / 1024 / 1024);
+
+        final String vendorName = GlUtil.getVendor();
+        final String rendererName = GlUtil.getRenderer();
+        final String cpuInfo = GlUtil.getCpuInfo();
+
         final String displayInfo = String.format(
                 "%d x %d (%s)",
-                window.getWidth(), window.getHeight(), gpuDevice.getDeviceInfo().vendorName());
+                window.getWidth(), window.getHeight(), vendorName);
 
-        final String graphicsApi = gpuDevice.getDeviceInfo().backendName();
-        final String gpuDriverVersion = gpuDevice.getDeviceInfo().driverInfo();
+        final String graphicsApi = "OpenGL";
+        final String gpuDriverVersion = "N/A";
         final String gpuUtilization = gpuUtilization();
 
         lines.get(0).value(time);
@@ -119,9 +121,9 @@ public class SystemModule extends BaseModule {
                                 : memoryUsage);
         lines.get(3).value(allocationRateStr);
         lines.get(4).value(allocatedMemory);
-        lines.get(5).value(GLX._getCpuInfo());
+        lines.get(5).value(cpuInfo);
         lines.get(6).value(displayInfo);
-        lines.get(7).value(gpuDevice.getDeviceInfo().name());
+        lines.get(7).value(rendererName);
         lines.get(8).value(gpuUtilization);
         lines.get(9).value(graphicsApi);
         lines.get(10).value(gpuDriverVersion);
